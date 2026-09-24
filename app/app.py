@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.recommender import get_recommendations, MOCK_REFERENCE_ARTISTS, MOOD_PROFILES
-from src.db_utils import get_db_connection
+from src.db_utils import get_db_connection, save_user_response
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 # Usamos una URL de un cuadrado rojo para el ícono de la pestaña, sin emojis.
@@ -147,11 +147,21 @@ with tab1:
         if not selected_mood and not selected_artists:
             st.error("Por favor, selecciona al menos un mood o un artista de referencia.")
         else:
+            # 1. Guardar la respuesta en la base de datos (Neon)
+            # Mapeamos "si" a "yes" para cumplir con la restricción CHECK de PostgreSQL
+            db_listens_bts = "yes" if listens_to_bts == "si" else "no"
+            
+            try:
+                save_user_response(db_listens_bts, selected_mood, artist_1, artist_2, artist_3)
+            except Exception as e:
+                st.error(f"Error al guardar la respuesta: {e}")
+
+            # 2. Generar recomendaciones
             with st.spinner("Buscando las mejores coincidencias en el universo BTS..."):
                 results = get_recommendations(
                     mood=selected_mood, 
                     artists=selected_artists, 
-                    listens_to_bts=listens_to_bts, 
+                    listens_to_bts=listens_to_bts, # El recomendador sigue usando "si"/"no" internamente
                     limit=5
                 )
                 
