@@ -5,4 +5,5 @@ venv/
 .venv/
 *.sqlite3
 data/raw/
-data/processed/
+data/processed/.DS_Store
+.cache/
